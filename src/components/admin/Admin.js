@@ -243,6 +243,10 @@ const ABI = [{
 
 
 
+
+
+
+
 const Admin = () => {
     const [account, setAccount] = useState('');
     const [contract, setContract] = useState(null);
@@ -250,6 +254,7 @@ const Admin = () => {
     const [issues, setIssues] = useState([]);
     const [newIssueDescription, setNewIssueDescription] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
   
     useEffect(() => {
       const loadBlockchainData = async () => {
@@ -273,7 +278,12 @@ const Admin = () => {
         let issuesArray = [];
         for (let i = 1; i <= issueCount; i++) {
           const issue = await contract.methods.getIssue(i).call();
-          issuesArray.push(issue);
+          issuesArray.push({
+            description: issue.description,
+            yesCount: issue.yesCount ? parseInt(issue.yesCount) : 0,
+            noCount: issue.noCount ? parseInt(issue.noCount) : 0,
+            isOpen: issue.isOpen,
+          });
         }
         setIssues(issuesArray);
       };
@@ -282,14 +292,25 @@ const Admin = () => {
     }, []);
   
     const openIssue = async (description) => {
-      await contract.methods.openIssue(description).send({ from: account });
-      window.location.reload();
+      try {
+        await contract.methods.openIssue(description).send({ from: account });
+        window.location.reload();
+      } catch (error) {
+        if (error.code === 4001) {
+          // User rejected the transaction
+          setErrorMessage('Transaction rejected by user.');
+        } else {
+          // Other errors
+          setErrorMessage('An error occurred while processing the transaction.');
+        }
+      }
     };
   
     return (
       <div className="admin-container">
         <h1>Admin Page</h1>
         <p>Account: {account}</p>
+        {errorMessage && <p className="error-message">{errorMessage}</p>}
         {isAdmin && (
           <>
             <h2>Open an Issue</h2>
