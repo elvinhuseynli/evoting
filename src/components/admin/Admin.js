@@ -1,6 +1,7 @@
 // src/Admin.js
 import React, { useEffect, useState } from 'react';
 import Web3 from 'web3';
+import { Link } from 'react-router-dom';
 import detectEthereumProvider from '@metamask/detect-provider';
 import './admin.css';
 
@@ -247,107 +248,117 @@ const ABI = [{
 
 
 
+
 const Admin = () => {
-    const [account, setAccount] = useState('');
-    const [contract, setContract] = useState(null);
-    const [issueCount, setIssueCount] = useState(0);
-    const [issues, setIssues] = useState([]);
-    const [newIssueDescription, setNewIssueDescription] = useState('');
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-  
-    useEffect(() => {
-      const loadBlockchainData = async () => {
-        const provider = await detectEthereumProvider();
-        if (provider) {
-          await provider.request({ method: 'eth_requestAccounts' });
-          const web3 = new Web3(provider);
-          const accounts = await web3.eth.getAccounts();
-          setAccount(accounts[0]);
-          const contractInstance = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
-          setContract(contractInstance);
-          const admin = await contractInstance.methods.admin().call();
-          setIsAdmin(accounts[0] === admin);
-          const issueCount = await contractInstance.methods.issueCount().call();
-          setIssueCount(issueCount);
-          loadIssues(contractInstance, issueCount);
-        }
-      };
-  
-      const loadIssues = async (contract, issueCount) => {
-        let issuesArray = [];
-        for (let i = 1; i <= issueCount; i++) {
-          const issue = await contract.methods.getIssue(i).call();
-          issuesArray.push({
-            description: issue.description,
-            yesCount: issue.yesCount ? parseInt(issue.yesCount) : 0,
-            noCount: issue.noCount ? parseInt(issue.noCount) : 0,
-            isOpen: issue.isOpen,
-          });
-        }
-        setIssues(issuesArray);
-      };
-  
-      loadBlockchainData();
-    }, []);
-  
-    const openIssue = async (description) => {
-      try {
-        await contract.methods.openIssue(description).send({ from: account });
-        window.location.reload();
-      } catch (error) {
-        if (error.code === 4001) {
-          // User rejected the transaction
-          setErrorMessage('Transaction rejected by user.');
-        } else {
-          // Other errors
-          setErrorMessage('An error occurred while processing the transaction.');
-        }
+  const [account, setAccount] = useState('');
+  const [contract, setContract] = useState(null);
+  const [issueCount, setIssueCount] = useState(0);
+  const [issues, setIssues] = useState([]);
+  const [newIssueDescription, setNewIssueDescription] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [notification, setNotification] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const loadBlockchainData = async () => {
+      const provider = await detectEthereumProvider();
+      if (provider) {
+        await provider.request({ method: 'eth_requestAccounts' });
+        const web3 = new Web3(provider);
+        const accounts = await web3.eth.getAccounts();
+        setAccount(accounts[0]);
+        const contractInstance = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+        setContract(contractInstance);
+        const admin = await contractInstance.methods.admin().call();
+        setIsAdmin(accounts[0] === admin);
+        const issueCount = await contractInstance.methods.issueCount().call();
+        setIssueCount(issueCount);
+        loadIssues(contractInstance, issueCount);
       }
     };
-  
-    return (
-      <div className="admin-container">
-        <h1>Admin Page</h1>
-        <p>Account: {account}</p>
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
-        {isAdmin && (
-          <>
-            <h2>Open an Issue</h2>
-            <input
-              type="text"
-              placeholder="Issue description"
-              value={newIssueDescription}
-              onChange={(e) => setNewIssueDescription(e.target.value)}
-            />
-            <button onClick={() => openIssue(newIssueDescription)}>Open Issue</button>
-          </>
-        )}
-        <h2>Issues Progress</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Issue ID</th>
-              <th>Description</th>
-              <th>Yes Count</th>
-              <th>No Count</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {issues.map((issue, index) => (
-              <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{issue.description}</td>
-                <td>{issue.yesCount}</td>
-                <td>{issue.noCount}</td>
-                <td>{issue.isOpen ? 'Open' : 'Closed'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
+
+    const loadIssues = async (contract, issueCount) => {
+      let issuesArray = [];
+      for (let i = 1; i <= issueCount; i++) {
+        const issue = await contract.methods.getIssue(i).call();
+        issuesArray.push({
+          description: issue.description,
+          yesCount: issue.yesCount ? parseInt(issue.yesCount) : 0,
+          noCount: issue.noCount ? parseInt(issue.noCount) : 0,
+          isOpen: issue.isOpen,
+        });
+      }
+      setIssues(issuesArray);
+    };
+
+    loadBlockchainData();
+  }, []);
+
+  const openIssue = async (description) => {
+    setIsLoading(true);
+    try {
+      await contract.methods.openIssue(description).send({ from: account });
+      setIsLoading(false);
+      window.location.reload();
+    } catch (error) {
+      setIsLoading(false);
+      if (error.code === 4001) {
+        setErrorMessage('Transaction rejected by user.');
+      } else {
+        setErrorMessage('An error occurred while processing the transaction.');
+      }
+    }
   };
-  
-  export default Admin;
+
+  return (
+    <div className="admin-container">
+      <h1>Admin Page</h1>
+      <p className="account-info">Account: {account}</p>
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+      {notification && <p className="notification-message">{notification}</p>}
+      {isLoading && <p className="loading-message">Transaction in progress...</p>}
+      {isAdmin && (
+        <div>
+          <h2>Open a New Issue</h2>
+          <input
+            type="text"
+            value={newIssueDescription}
+            onChange={(e) => setNewIssueDescription(e.target.value)}
+            placeholder="Enter issue description"
+            className="issue-input"
+          />
+          <button onClick={() => openIssue(newIssueDescription)}>Open Issue</button>
+        </div>
+      )}
+      <h2>Issues Progress</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Issue ID</th>
+            <th>Description</th>
+            <th>Yes Count</th>
+            <th>No Count</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {issues.map((issue, index) => (
+            <tr key={index}>
+              <td>{index + 1}</td>
+              <td>{issue.description}</td>
+              <td>{issue.yesCount}</td>
+              <td>{issue.noCount}</td>
+              <td>{issue.isOpen ? 'Open' : 'Closed'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <Link to="/">
+        <button className="back-button">Back to Main Page</button>
+      </Link>
+    </div>
+  );
+};
+
+export default Admin;

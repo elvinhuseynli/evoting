@@ -1,6 +1,7 @@
 // src/User.js
 import React, { useEffect, useState } from 'react';
 import Web3 from 'web3';
+import { Link } from 'react-router-dom';
 import detectEthereumProvider from '@metamask/detect-provider';
 import './user.css';
 
@@ -319,10 +320,8 @@ const User = () => {
     } catch (error) {
       setIsLoading(false);
       if (error.code === 4001) {
-        // User rejected the transaction
         setErrorMessage('Transaction rejected by user.');
       } else {
-        // Other errors
         setErrorMessage('An error occurred while processing the transaction.');
       }
     }
@@ -368,6 +367,9 @@ const User = () => {
           ))}
         </tbody>
       </table>
+      <Link to="/">
+        <button className="back-button">Back to Main Page</button>
+      </Link>
     </div>
   );
 };
