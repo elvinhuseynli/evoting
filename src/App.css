@@ -1,21 +1,19 @@
-/* src/App.css */
 
 body {
   margin: 0;
   font-family: 'Arial', sans-serif;
-  background: url('https://www.toptal.com/designers/subtlepatterns/patterns/memphis-mini-dark.png');
+  background:url("../src/more-leaves.png");
   color: #f0f0f0;
-  display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100vh;
-  text-align: center;
+  min-height: 100vh; /* Ensure background covers the entire viewport */
+  height: 100%;
+  overflow: auto;
 }
 
 .App {
   width: 100%;
-  max-width: 1200px;
-  margin: auto;
+  margin: 0;
+  padding: 20px; /* Added padding for better spacing */
 }
 
 .welcome-container {
@@ -23,6 +21,8 @@ body {
   padding: 40px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  margin-top: 40px; /* Added margin to ensure content is visible */
+  text-align: center; /* Centered text inside the container */
 }
 
 .welcome-header {
@@ -62,3 +62,4 @@ body {
   background-color: #0056b3;
   transform: scale(1.05);
 }
+

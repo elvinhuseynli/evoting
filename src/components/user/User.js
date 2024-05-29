@@ -246,6 +246,8 @@ const ABI = [{
 
 
 
+
+
 const User = () => {
   const [account, setAccount] = useState('');
   const [contract, setContract] = useState(null);
@@ -253,6 +255,8 @@ const User = () => {
   const [issues, setIssues] = useState([]);
   const [votedIssues, setVotedIssues] = useState(new Set());
   const [errorMessage, setErrorMessage] = useState('');
+  const [notification, setNotification] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const loadBlockchainData = async () => {
@@ -267,6 +271,7 @@ const User = () => {
         const issueCount = await contractInstance.methods.issueCount().call();
         setIssueCount(issueCount);
         loadIssues(contractInstance, issueCount);
+        loadVotedIssues(contractInstance, accounts[0]);
       }
     };
 
@@ -284,19 +289,35 @@ const User = () => {
       setIssues(issuesArray);
     };
 
+    const loadVotedIssues = async (contract, userAddress) => {
+      const votedIssuesSet = new Set();
+      const pastVotes = await contract.getPastEvents('Voted', {
+        filter: { voter: userAddress },
+        fromBlock: 0,
+        toBlock: 'latest'
+      });
+      pastVotes.forEach(event => {
+        votedIssuesSet.add(event.returnValues.issueId);
+      });
+      setVotedIssues(votedIssuesSet);
+    };
+
     loadBlockchainData();
   }, []);
 
   const vote = async (issueId, voteYes) => {
-    if (votedIssues.has(issueId)) {
-      alert('You have already voted on this issue.');
+    if (votedIssues.has(issueId.toString())) {
+      setNotification('You have already voted on this issue.');
       return;
     }
+    setIsLoading(true);
     try {
-      await contract.methods.vote(issueId, voteYes).send({ from: account });
-      setVotedIssues(new Set(votedIssues).add(issueId));
+      await contract.methods.vote(issueId, voteYes).send({ from: account, gasLimit: 22000 });
+      setVotedIssues(new Set(votedIssues).add(issueId.toString()));
+      setIsLoading(false);
       window.location.reload();
     } catch (error) {
+      setIsLoading(false);
       if (error.code === 4001) {
         // User rejected the transaction
         setErrorMessage('Transaction rejected by user.');
@@ -310,19 +331,18 @@ const User = () => {
   return (
     <div className="user-container">
       <h1>User Page</h1>
-      <p style={{
-        color: "black",
-        fontSize: "1.2em"
-      }}>Account: {account}</p>
+      <p className="account-info">Account: {account}</p>
       {errorMessage && <p className="error-message">{errorMessage}</p>}
+      {notification && <p className="notification-message">{notification}</p>}
+      {isLoading && <p className="loading-message">Transaction in progress...</p>}
       <h2>Vote</h2>
       {issues.map((issue, index) => (
         <div className="issue" key={index}>
           <p>Description: {issue.description}</p>
           <p>Yes Count: {issue.yesCount}</p>
           <p>No Count: {issue.noCount}</p>
-          <button onClick={() => vote(index + 1, true)} disabled={votedIssues.has(index + 1)}>Vote Yes</button>
-          <button onClick={() => vote(index + 1, false)} disabled={votedIssues.has(index + 1)}>Vote No</button>
+          <button onClick={() => vote(index + 1, true)} disabled={votedIssues.has((index + 1).toString()) || isLoading}>Vote Yes</button>
+          <button onClick={() => vote(index + 1, false)} disabled={votedIssues.has((index + 1).toString()) || isLoading}>Vote No</button>
         </div>
       ))}
       <h2>Issues Progress</h2>

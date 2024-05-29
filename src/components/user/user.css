@@ -4,18 +4,32 @@
   text-align: center;
   font-family: 'Arial', sans-serif;
   color: #f0f0f0;
-  padding: 20px;
+  flex-direction: column;
+  display: flex;
+  padding: 20px; /* Adjusted padding for better layout */
+  background-color: #2c2c2c; /* Ensures background contrast */
+  min-height: 100vh; /* Ensures the container covers the full view height */
 }
 
 .user-container h1 {
   color: #ffffff;
   font-size: 3em;
-  margin-top: 20px;
+  margin: 20px 0; /* Reduced top margin */
 }
 
 .user-container h2 {
-  color: black;
+  color: #ffffff;
   font-size: 2em;
+  margin: 20px 0;
+}
+
+.user-container .account-info {
+  color: #f0f0f0;
+  font-size: 1.2em;
+  background-color: #444;
+  padding: 10px;
+  border-radius: 5px;
+  display: inline-block;
   margin: 20px 0;
 }
 
@@ -26,18 +40,19 @@
 
 .user-container button {
   margin: 10px;
-  padding: 10px 20px;
+  padding: 15px 30px; /* Increased padding for better touch target size */
   background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s;
+  font-size: 1.1em; /* Adjusted font size for better readability */
+  transition: background-color 0.3s, transform 0.2s ease; /* Added transform to hover */
 }
 
 .user-container button:hover {
   background-color: #218838;
+  transform: scale(1.05); /* Slight scale on hover for a tactile feel */
 }
 
 .user-container button[disabled] {
@@ -45,17 +60,31 @@
   cursor: not-allowed;
 }
 
+.user-container .error-message, .user-container .notification-message, .user-container .loading-message {
+  font-size: 1.2em;
+  margin-top: 20px; /* Added margin for spacing */
+}
+
 .user-container .error-message {
   color: #ff4d4d;
 }
 
+.user-container .notification-message {
+  color: #ffeb3b;
+}
+
+.user-container .loading-message {
+  color: #00ff00;
+}
+
 .issue {
-  background-color: #333;
-  border: 1px solid #444;
+  background-color: #444;
+  border: 1px solid #555;
   border-radius: 10px;
   padding: 20px;
-  margin: 20px;
+  margin: 20px 0; /* Centered issue blocks */
   text-align: left;
+  max-width: 90%; /* Limit width for larger screens */
 }
 
 .issue p {
