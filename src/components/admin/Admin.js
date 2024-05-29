@@ -248,7 +248,6 @@ const ABI = [{
 
 
 
-
 const Admin = () => {
   const [account, setAccount] = useState('');
   const [contract, setContract] = useState(null);
@@ -287,6 +286,7 @@ const Admin = () => {
           yesCount: issue.yesCount ? parseInt(issue.yesCount) : 0,
           noCount: issue.noCount ? parseInt(issue.noCount) : 0,
           isOpen: issue.isOpen,
+          closeTimestamp: parseInt(issue.closeTimestamp) * 1000, // Convert to milliseconds
         });
       }
       setIssues(issuesArray);
@@ -340,6 +340,7 @@ const Admin = () => {
             <th>Yes Count</th>
             <th>No Count</th>
             <th>Status</th>
+            <th>Closes In</th>
           </tr>
         </thead>
         <tbody>
@@ -350,6 +351,7 @@ const Admin = () => {
               <td>{issue.yesCount}</td>
               <td>{issue.noCount}</td>
               <td>{issue.isOpen ? 'Open' : 'Closed'}</td>
+              <td>{issue.isOpen ? new Date(issue.closeTimestamp).toLocaleString() : 'Closed'}</td>
             </tr>
           ))}
         </tbody>

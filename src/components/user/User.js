@@ -248,7 +248,6 @@ const ABI = [{
 
 
 
-
 const User = () => {
   const [account, setAccount] = useState('');
   const [contract, setContract] = useState(null);
@@ -285,6 +284,7 @@ const User = () => {
           yesCount: issue.yesCount ? parseInt(issue.yesCount) : 0,
           noCount: issue.noCount ? parseInt(issue.noCount) : 0,
           isOpen: issue.isOpen,
+          closeTimestamp: parseInt(issue.closeTimestamp) * 1000, // Convert to milliseconds
         });
       }
       setIssues(issuesArray);
@@ -342,6 +342,7 @@ const User = () => {
           <p>No Count: {issue.noCount}</p>
           <button onClick={() => vote(index + 1, true)} disabled={votedIssues.has((index + 1).toString()) || isLoading}>Vote Yes</button>
           <button onClick={() => vote(index + 1, false)} disabled={votedIssues.has((index + 1).toString()) || isLoading}>Vote No</button>
+          <p>Closes In: {issue.isOpen ? new Date(issue.closeTimestamp).toLocaleString() : 'Closed'}</p>
         </div>
       ))}
       <h2>Issues Progress</h2>
@@ -353,6 +354,7 @@ const User = () => {
             <th>Yes Count</th>
             <th>No Count</th>
             <th>Status</th>
+            <th>Closes In</th>
           </tr>
         </thead>
         <tbody>
@@ -363,6 +365,7 @@ const User = () => {
               <td>{issue.yesCount}</td>
               <td>{issue.noCount}</td>
               <td>{issue.isOpen ? 'Open' : 'Closed'}</td>
+              <td>{issue.isOpen ? new Date(issue.closeTimestamp).toLocaleString() : 'Closed'}</td>
             </tr>
           ))}
         </tbody>
